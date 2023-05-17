@@ -15,7 +15,6 @@ md <- read.csv("Data/AHRI_DATASET_PM_MANUSCRIPT_CODEBOOK.csv") # metadata
 md %<>% as.data.table
 
 # Data wrangling ----------------------------------------------------------
-
 dt %<>% select(PHQ9_SCORE, PM1_DIAG_CONDITION, C_DP) # keep used variables only
 str(dt)
 
@@ -30,9 +29,7 @@ dt %<>% filter(PHQ9_SCORE >= 15) # most patients with PHQ9 score of 15 or higher
 # Descriptive statistics -----------------------------------------------------
 describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 
-
 # Fit standard linear model -----------------------------------------------
-
 mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION, data = dt)
 summary(mod)
 
@@ -58,17 +55,30 @@ plot(mod)[2] # QQ-plot shows divergence from normality at the tails
 
 # Gibbs sampling ----------------------------------------------------------
 
-# First step: specify priors for each parameter. These are based on the historical data (see manuscript)
-# b0 priors
+# First step: specify priors for each parameter. 
+
+# Uninformative priors
+# b0 
 mu00 <- 1 
 zeta00 <- 1.0E4  
-
-# b1 priors
+# b1 
 mu10 <- 1
 zeta10 <- 1.0E4
 nu10 <- 100 # prior df's -> bigger = wider tails
+# variance (σ^2) 
+a_0 = 1 
+b_0 = 1
+sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
 
-# variance (σ^2) priors
+# Informative priors. These are based on the historical data (see manuscript)
+# b0 
+mu00 <- mean(dt[PM1_DIAG_CONDITION == 0, PHQ9_SCORE]) 
+zeta00 <- sd(dt[, PHQ9_SCORE])
+# b1 
+mu10 <- 4.8
+zeta10 <- 1 / 2.9
+nu10 <- 100 # prior df's -> bigger = wider tails
+# variance (σ^2) 
 a_0 = 1 
 b_0 = 1
 sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
@@ -151,6 +161,8 @@ colnames(chains_b1) <- c("chain1", "chain2")
 chains_var <- cbind(chain1[1001:nrow(chain1), 3], chain2[1001:nrow(chain2), 3])   # extract variance & remove the warm up 
 colnames(chains_var) <- c("chain1", "chain2")
 
+rm(chain1, chain2)
+
 # Traceplots
 traceplot <- function(chains) {   # only handles 2 chains (per parameter)
   
@@ -185,7 +197,10 @@ annotate_figure(traceplots,
                 top = text_grob("Traceplots for the parameters (2 chains each) \n", color = "black", size = 18, face = "bold.italic"))
 
 #### Alternatively
+require(mcmcplots)
 mcmcplot(mcmcout = chains_b0)
+mcmcplot(mcmcout = chains_b1)
+mcmcplot(mcmcout = chains_var)
 
 # Autocorrelation plots
 autocorplot <- function(chains) { 
@@ -249,8 +264,9 @@ annotate_figure(autocorplots,
 
 # Parameter estimates (first chain):
 perc <- c(0.025, 0.975)
-bhat0_1 <- c(mean(chains_b0[, 1]), sd(chains_b0[, 1]), quantile(chains_b0[, 1], perc))
-bhat1_1 <- c(mean(chains_b1[, 1]), sd(chains_b1[, 1]), quantile(chains_b1[, 1], perc))
+bhat0_1 <- c(mean(chains_b0$chain1), sd(chains_b0$chain1), quantile(chains_b0$chain1, perc))
+bhat1_1 <- c(mean(chains_b1$chain1), sd(chains_b1$chain1), quantile(chains_b1$chain1, perc))
+# Where is sig2? chains_sig2
 estimates_c1 <- rbind(bhat0_1, bhat1_1) # also add variance mean
 rownames(estimates_c1) <- c("Intercept", "PM")
 colnames(estimates_c1) <- c("Beta", "SD", "2.5% ", "97.5%")
