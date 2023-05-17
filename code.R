@@ -14,11 +14,9 @@ dt %<>% as.data.table
 md <- read.csv("Data/AHRI_DATASET_PM_MANUSCRIPT_CODEBOOK.csv") # metadata
 md %<>% as.data.table
 
-
 # Data wrangling ----------------------------------------------------------
 
-# keep relevant variables only
-dt %<>% select(PHQ9_SCORE, PM1_DIAG_CONDITION, C_DP)
+dt %<>% select(PHQ9_SCORE, PM1_DIAG_CONDITION, C_DP) # keep used variables only
 str(dt)
 
 # Inclusion criteria include:
@@ -29,9 +27,6 @@ md[VAR == "PHQ9_GE10"]$Description
 #dt %<>% filter(PHQ9_GE10 == 1) # "while most patients (88%) with major depression had scores of 10 or greater."
 dt %<>% filter(PHQ9_SCORE >= 15) # most patients with PHQ9 score of 15 or higher get treatment
 
-
-
-
 # Descriptive statistics -----------------------------------------------------
 describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 
@@ -40,7 +35,6 @@ describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 
 mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION, data = dt)
 summary(mod)
-
 
 # Assumptions -------------------------------------------------------------
 
