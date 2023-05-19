@@ -146,11 +146,8 @@ chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_
 
 # Estimates ---------------------------------------------------------------
 
-chain1 %<>% as.data.table()
-chain2 %<>% as.data.table()
-chain1 <- chain1[1001:nrow(chain1)]
-chain2 <- chain2[1001:nrow(chain2)]
-
+chain1 <- as.data.table(chain1[1001:nrow(chain1), ])
+chain2 <- as.data.table(chain2[1001:nrow(chain2), ])
 
 gibbs_stats <- function(chain) { # requires a datatable, with columns as parameters
   
@@ -218,29 +215,30 @@ mcmcplot(mcmcout = chains_b1)
 mcmcplot(mcmcout = chains_var)
 
 # Autocorrelation plots
-autocorplot <- function(chain1, chain2) {    # only handles 2 chains (per parameter)
+autocors <- function(chain) {    # only handles 2 chains (per parameter)
   
   lags <- 40 # number of lags
-  par <- colnames(chain1)
+  par <- colnames(chain)
   
-  autocor <- list()
+  autocor <- matrix(0, nrow = lags, ncol = length(par))
   for (i in 1:length(par)) {
-    
-    autocor1 <- matrix(0, nrow = lags, ncol = length(par))
-    autocor2 <- matrix(0, nrow = lags, ncol = length(par))
-  
+
       for (j in 1:lags) {
-        autocor1[j, i] <- cor(chain1[1:I(nrow(chain1)-i), ..i], chain1[(i+1):nrow(chain1), ..i])
-        autocor2[j, i] <- cor(chain2[1:I(nrow(chain2)-i), ..i], chain2[(i+1):nrow(chain1), ..i])
+        autocor[j, i] <- cor(chain[1:I(nrow(chain)-j), ..i], chain[(j+1):nrow(chain), ..i])
       }
-    
-    autocor[i] <- data.table(chain1 = autocor1, chain2 = autocor2)
-    # colnames(autocor) <- colnames
-    
-  }
+  } 
   
-  autocor %<>% rbindlist()
-  
+  autocor %<>% as.data.table()
+  setnames(autocor, c("V1", "V2", "V3"), par)
+  return(autocor)
+
+}
+
+# Test
+autocors(chain1)
+autocors(chain2) 
+
+autocorplot <- function(chain1, chain2) {
   
   plot1 <- autocor %>%
     ggplot(aes(x = 1:lags)) +
