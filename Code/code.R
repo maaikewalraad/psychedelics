@@ -190,7 +190,7 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
   
   for (i in 1:length(par)) {
     
-    traceplot <- ggplot() + 
+    ggplot() + 
       geom_line(chain1, mapping = aes_string(x = I(1:H), y = par[i]), color = "#CC3399", linewidth = 0.4, alpha = 0.8) + 
       geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#339966", linewidth = 0.4, alpha = 0.6) +
       ggtitle("Convergence plot") +
@@ -200,9 +200,10 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
         plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
         axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
         axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
-  }
   
   ggsave(paste0("../Output/traceplot_", par[i], ".png"), width = 8, height = 4)
+  
+  }
   
 }
 
@@ -235,44 +236,32 @@ autocors <- function(chain) {    # only handles 2 chains (per parameter)
 }
 
 # Test
-autocors(chain1)
-autocors(chain2) 
+ac1 <- autocors(chain1)
+ac2 <- autocors(chain2) 
 
-autocorplot <- function(chain1, chain2) {
+autocorplot <- function(ac1, ac2) {
   
-  plot1 <- autocor %>%
-    ggplot(aes(x = 1:lags)) +
-    geom_bar(aes(y = chain1), col = "#CC3399", fill = "#FFFFFF", alpha = 0.4, stat = "identity") +
+  par <- colnames(ac_chain1)
+  lags <- nrow(ac1)
+  
+  for (i in 1:length(par)) {
+  
+    ggplot() +
+    geom_bar(ac1, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#CC3399", fill = "#FFFFFF", alpha = 0.4, stat = "identity") +
+    geom_bar(ac2, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#CC3399", fill = "#FFFFFF", alpha = 0.4, stat = "identity") +
     ggtitle("Chain 1") +
     xlab("Lag") +
     ylab("Autocorrelation") +
+    ylim(0,1) +
     theme(
       plot.title = element_text(color = "grey44", size = 11, face = "bold.italic", hjust = 0.45),
       axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
       axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
   
-  plot2 <- autocor %>% 
-    ggplot(aes(x = 1:lags)) +
-    geom_bar(aes(y = chain2), col =  "#339966", fill = "#FFFFFF", alpha = 0.9, stat = "identity") +
-    ggtitle("Chain 2") +
-    xlab("Lag") + 
-    ylab("Autocorrelation") +
-    theme(
-      plot.title = element_text(color = "grey44", size = 11, face = "bold.italic", hjust = 0.45),
-      axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
-      axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+  ggsave(paste0("../Output/acplot_", par[i], ".png"), width = 8, height = 4)
   
-  corplots <- ggarrange(plot1, plot2)
-  
-  return(corplots)
+  }
   
 }
 
-autocorplots <- ggarrange(autocorplot(chains_b0), autocorplot(chains_b1), autocorplot(chains_var),
-                          labels = parameters,
-                          ncol = 2, nrow = 2) 
-
-annotate_figure(autocorplots,
-                top = text_grob("Autocorrelation plots for the parameters (2 chains each) \n", color = "black", size = 18, face = "bold.italic"))
-
-
+autocorplot(ac1, ac2)
