@@ -9,9 +9,9 @@ require(ggpubr)
 set.seed(7079540) # for reproducibility
 
 # Import data
-dt <- read.csv("Data/AHRI_DATASET_PM_MANUSCRIPT_DATA.csv")
+dt <- read.csv("../Data/AHRI_DATASET_PM_MANUSCRIPT_DATA.csv")
 dt %<>% as.data.table
-md <- read.csv("Data/AHRI_DATASET_PM_MANUSCRIPT_CODEBOOK.csv") # metadata
+md <- read.csv("../Data/AHRI_DATASET_PM_MANUSCRIPT_CODEBOOK.csv") # metadata
 md %<>% as.data.table
 
 # Data wrangling ----------------------------------------------------------
@@ -148,6 +148,9 @@ chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_
 
 chain1 %<>% as.data.table()
 chain2 %<>% as.data.table()
+chain1 <- chain1[1001:nrow(chain1)]
+chain2 <- chain2[1001:nrow(chain2)]
+
 
 gibbs_stats <- function(chain) { # requires a datatable, with columns as parameters
   
@@ -158,7 +161,7 @@ gibbs_stats <- function(chain) { # requires a datatable, with columns as paramet
   estimates <- cbind(t(x), t(y), t(z))
   rownames(estimates) <- c("Intercept", "PM", "Variance")
   colnames(estimates) <- c("Beta", "SD", "2.5% ", "97.5%")
-  print(estimates)
+  return(estimates)
   
 }
 
@@ -183,32 +186,30 @@ colnames(chains_var) <- c("chain1", "chain2")
 rm(chain1, chain2)
 
 # Traceplots
-traceplot <- function(chains) {   # only handles 2 chains (per parameter)
+traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter)
   
-  traceplot <- chains %>% 
-    ggplot(aes(x = 1:nrow(chains))) + 
-    geom_line(aes(y = chain1), color = "#CC3399", size = 0.4, alpha = 0.8) + 
-    geom_line(aes(y = chain2), color = "#339966", size = 0.4, alpha = 0.6) +
-    ggtitle("Convergence plot") +
-    ylab("Sampled value") +
-    xlab("Number of iterations") +
-    theme(
-      plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
-      axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
-      axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+  par <- colnames(chain1)
+  H <- nrow(chain1)
   
-  ggsave("Output/")
+  for (i in 1:length(par)) {
+    
+    traceplot <- ggplot() + 
+      geom_line(chain1, mapping = aes_string(x = I(1:H), y = par[i]), color = "#CC3399", linewidth = 0.4, alpha = 0.8) + 
+      geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#339966", linewidth = 0.4, alpha = 0.6) +
+      ggtitle("Convergence plot") +
+      ylab("Sampled value") +
+      xlab("Number of iterations") +
+      theme(
+        plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
+        axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
+        axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+  }
   
-  return(traceplot)
+  ggsave(paste0("../Output/traceplot_", par[i], ".png"), width = 8, height = 4)
   
 }
 
-traceplots <- ggarrange(traceplot(chains_b0), traceplot(chains_b1), traceplot(chains_var),
-                        labels = parameters,
-                        ncol = 2, nrow = 2)
-
-annotate_figure(traceplots,
-                top = text_grob("Traceplots for the parameters (2 chains each) \n", color = "black", size = 18, face = "bold.italic"))
+traceplot(chain1, chain2)
 
 #### Alternatively
 require(mcmcplots)
