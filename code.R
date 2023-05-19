@@ -144,11 +144,30 @@ chain1 <- gibbs.chains(b0 = 0.2, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = d
 chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION) 
 
 
+# Estimates ---------------------------------------------------------------
+
+chain1 %<>% as.data.table()
+chain2 %<>% as.data.table()
+
+gibbs_stats <- function(chain) { # requires a datatable, with columns as parameters
+  
+  perc <- c(0.025, 0.975)
+  x <- chain[, lapply(.SD, mean)] # EAP
+  y <- chain[, lapply(.SD, sd)] # SD
+  z <- chain[, lapply(.SD, function(x) quantile(x, perc))] # CI
+  estimates <- cbind(t(x), t(y), t(z))
+  rownames(estimates) <- c("Intercept", "PM", "Variance")
+  colnames(estimates) <- c("Beta", "SD", "2.5% ", "97.5%")
+  print(estimates)
+  
+}
+
+gibbs_stats(chain1) 
+gibbs_stats(chain2)
+
 # Assess convergence ------------------------------------------------------
 
 # Subset chains
-chain1 %<>% as.data.table()
-chain2 %<>% as.data.table()
 parameters <- colnames(chain1)  # saving for plot
 
 # b0:
@@ -259,24 +278,4 @@ autocorplots <- ggarrange(autocorplot(chains_b0), autocorplot(chains_b1), autoco
 annotate_figure(autocorplots,
                 top = text_grob("Autocorrelation plots for the parameters (2 chains each) \n", color = "black", size = 18, face = "bold.italic"))
 
-
-# Obtain parameter estimates, credible intervals and interpretation -------
-
-# Parameter estimates (first chain):
-perc <- c(0.025, 0.975)
-bhat0_1 <- c(mean(chains_b0$chain1), sd(chains_b0$chain1), quantile(chains_b0$chain1, perc))
-bhat1_1 <- c(mean(chains_b1$chain1), sd(chains_b1$chain1), quantile(chains_b1$chain1, perc))
-# Where is sig2? chains_sig2
-estimates_c1 <- rbind(bhat0_1, bhat1_1) # also add variance mean
-rownames(estimates_c1) <- c("Intercept", "PM")
-colnames(estimates_c1) <- c("Beta", "SD", "2.5% ", "97.5%")
-estimates_c1
-
-# Parameter estimates (second chain):
-bhat0_2 <- c(mean(chains_b0[, 2]), sd(chains_b0[, 2]), quantile(chains_b0[, 2], perc))
-bhat1_2 <- c(mean(chains_b1[, 2]), sd(chains_b1[, 2]), quantile(chains_b1[, 2], perc))
-estimates_c2 <- rbind(bhat0_2, bhat1_2)
-rownames(estimates_c2) <- c("Intercept", "PM")
-colnames(estimates_c2) <- c("Beta", "SD", "2.5% ", "97.5%")
-estimates_c2
 
