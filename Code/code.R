@@ -211,34 +211,37 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
 
 traceplot(chain1, chain2)
 
-#### Alternatively
+#### Reference
 require(mcmcplots)
 mcmcplot(mcmcout = chains_b0)
 mcmcplot(mcmcout = chains_b1)
 mcmcplot(mcmcout = chains_var)
 
 # Autocorrelation plots
-autocorplot <- function(chains) { 
-  # 'chains' object should be a dataframe with samples in rows and different chains in separate columnns. Handles only 2 chains.
-  lags <- 40 # number of lags
-  x <- 0
-  colnames <- NULL;
-  while (x < ncol(chains))  {  
-    x <- x+1  
-    colnames <- c(colnames, paste0("chain", x, collapse = "," ))
-  }
-  autocor <- matrix(0, nrow = 40, ncol = ncol(chains))
+autocorplot <- function(chain1, chain2) {    # only handles 2 chains (per parameter)
   
-  for (chain in 1:ncol(chains)) {
+  lags <- 40 # number of lags
+  par <- colnames(chain1)
+  
+  autocor <- list()
+  for (i in 1:length(par)) {
     
-    for (i in 1:lags) {
-      autocor[i, chain] <- cor(chains[1:I(nrow(chains)-i), chain], chains[(i+1):nrow(chains), chain])
-    }
+    autocor1 <- matrix(0, nrow = lags, ncol = length(par))
+    autocor2 <- matrix(0, nrow = lags, ncol = length(par))
+  
+      for (j in 1:lags) {
+        autocor1[j, i] <- cor(chain1[1:I(nrow(chain1)-i), ..i], chain1[(i+1):nrow(chain1), ..i])
+        autocor2[j, i] <- cor(chain2[1:I(nrow(chain2)-i), ..i], chain2[(i+1):nrow(chain1), ..i])
+      }
     
-    autocor <- as.data.frame(autocor)
-    colnames(autocor) <- colnames
+    autocor[i] <- data.table(chain1 = autocor1, chain2 = autocor2)
+    # colnames(autocor) <- colnames
     
   }
+  
+  autocor %<>% rbindlist()
+  
+  
   plot1 <- autocor %>%
     ggplot(aes(x = 1:lags)) +
     geom_bar(aes(y = chain1), col = "#CC3399", fill = "#FFFFFF", alpha = 0.4, stat = "identity") +
