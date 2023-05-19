@@ -185,17 +185,10 @@ rm(chain1, chain2)
 # Traceplots
 traceplot <- function(chains) {   # only handles 2 chains (per parameter)
   
-  x <- 0
-  colnames <- NULL;
-  while (x < ncol(chains))  {  
-    x <- x+1  
-    colnames <- c(colnames, paste0("chain", x, collapse = "," ))
-  }
-  
   traceplot <- chains %>% 
     ggplot(aes(x = 1:nrow(chains))) + 
-    geom_line(aes(y = chain1), color = "#CC3399", linetype = "dashed", size = 0.4, alpha = 0.8) + 
-    geom_line(aes(y = chain2), color= "#339966", linetype = "twodash", size = 0.4, alpha = 0.6) +
+    geom_line(aes(y = chain1), color = "#CC3399", size = 0.4, alpha = 0.8) + 
+    geom_line(aes(y = chain2), color = "#339966", size = 0.4, alpha = 0.6) +
     ggtitle("Convergence plot") +
     ylab("Sampled value") +
     xlab("Number of iterations") +
@@ -203,6 +196,8 @@ traceplot <- function(chains) {   # only handles 2 chains (per parameter)
       plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
       axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
       axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+  
+  ggsave("Output/")
   
   return(traceplot)
   
