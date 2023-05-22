@@ -192,7 +192,7 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
     
     ggplot() + 
       geom_line(chain1, mapping = aes_string(x = I(1:H), y = par[i]), color = "#CC3399", linewidth = 0.4, alpha = 0.8) + 
-      geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#339966", linewidth = 0.4, alpha = 0.6) +
+      geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#0000FF", linewidth = 0.4, alpha = 0.6) +
       ggtitle("Convergence plot") +
       ylab("Sampled value") +
       xlab("Number of iterations") +
@@ -209,11 +209,6 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
 
 traceplot(chain1, chain2)
 
-#### Reference
-require(mcmcplots)
-mcmcplot(mcmcout = chains_b0)
-mcmcplot(mcmcout = chains_b1)
-mcmcplot(mcmcout = chains_var)
 
 # Autocorrelation plots
 autocors <- function(chain) {    # only handles 2 chains (per parameter)
@@ -241,14 +236,14 @@ ac2 <- autocors(chain2)
 
 autocorplot <- function(ac1, ac2) {
   
-  par <- colnames(ac_chain1)
+  par <- colnames(ac1)
   lags <- nrow(ac1)
   
   for (i in 1:length(par)) {
   
     ggplot() +
-    geom_bar(ac1, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#CC3399", fill = "#FFFFFF", alpha = 0.4, stat = "identity") +
-    geom_bar(ac2, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#CC3399", fill = "#FFFFFF", alpha = 0.4, stat = "identity") +
+    geom_bar(ac1, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#CC3399", width = 0.1, alpha = 0.4, stat = "identity") +
+    geom_bar(ac2, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#FF99FF", width = 0.1, alpha = 0.4, stat = "identity") +
     ggtitle("Chain 1") +
     xlab("Lag") +
     ylab("Autocorrelation") +
