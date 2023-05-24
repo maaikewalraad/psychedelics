@@ -15,7 +15,7 @@ md <- read.csv("../Data/AHRI_DATASET_PM_MANUSCRIPT_CODEBOOK.csv") # metadata
 md %<>% as.data.table
 
 # Data wrangling ----------------------------------------------------------
-dt %<>% select(PHQ9_SCORE, PM1_DIAG_CONDITION, C_DP) # keep used variables only
+dt %<>% select(PHQ9_SCORE, PM1_DIAG_CONDITION, C_DP) # keep main variables only
 str(dt)
 
 # Inclusion criteria include:
@@ -35,10 +35,6 @@ summary(mod)
 
 # Assumptions -------------------------------------------------------------
 
-# linearity
-plot(dt$PM1_DIAG_CONDITION, dt$PHQ9_SCORE)
-abline(mod) # add fitted regression line to scatterplot
-
 # homoscedasticity (constant residual variance)
 plot(mod)[1] 
 
@@ -50,37 +46,34 @@ dt %>% filter(PM1_DIAG_CONDITION == 1) %$% hist(PHQ9_SCORE)
 # normality in residuals
 plot(mod)[2] # QQ-plot shows divergence from normality at the tails
 
-# independence of observations (explain analytically)
-
-
 # Gibbs sampling ----------------------------------------------------------
 
 # First step: specify priors for each parameter. 
 
-# Uninformative priors
-# b0 
-mu00 <- 1 
-zeta00 <- 1.0E4  
-# b1 
-mu10 <- 1
-zeta10 <- 1.0E4
-nu10 <- 100 # prior df's -> bigger = wider tails
-# variance (σ^2) 
-a_0 = 1 
-b_0 = 1
-sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
+# # Uninformative priors (compare with standard lm)
+# # b0 
+# mu00 <- 1 
+# zeta00 <- 1.0E4  
+# # b1 
+# mu10 <- 1
+# zeta10 <- 1.0E4
+# nu10 <- 100 # prior df's -> bigger = wider tails
+# # variance (σ^2) 
+# a_0 = 1 
+# b_0 = 1
+# sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
 
 # Informative priors. These are based on the historical data (see manuscript)
 # b0 
-mu00 <- mean(dt[PM1_DIAG_CONDITION == 0, PHQ9_SCORE]) 
-zeta00 <- sd(dt[, PHQ9_SCORE])
+mu00 <- 1 # Q. make this based on data or hwatever
+zeta00 <- 1.0E4 
 # b1 
-mu10 <- 4.8
-zeta10 <- 1 / 2.9
+mu10 <- 4.8 # prior mean
+zeta10 <- 1.0E4 # prior variance
 nu10 <- 100 # prior df's -> bigger = wider tails
 # variance (σ^2) 
-a_0 = 1 
-b_0 = 1
+a_0 = 1
+b_0 = 1 # Vague priors, cause sample residual variance in historical data unknown
 sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
 
 # Second step: make a Gibbs function
@@ -95,7 +88,7 @@ post_b1 <- function(b0, b1, sig2, y, x1) { # MH function for b1
 gibbs.chains <- function(b0, b1, sig2, y, x1) {
   set.seed(7079540)
   warmup <- 1000
-  H <- 25000 + warmup # number of samples drawn 
+  H <- 50000 + warmup # number of samples drawn 
   n_par <- 3
   simulated <- matrix(0, nrow = H, ncol = n_par)
   colnames(simulated) <- c("b0","b1", "sig2") 
@@ -110,8 +103,8 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
     
     # b1 (incl. MH, Non-conjugate prior):
     beta1_c <- b1 
-    beta1_n <- rnorm(1, mean = 0, sd = 1)   # Sample from proposal density
-    r_post <- post_b1(b0, beta1_n, sig2, y, x1)/post_b1(b0, beta1_c, sig2, y, x1) # Ratio of posterior
+    beta1_n <- rnorm(1, mean = 2, sd = 3)   # Sample from proposal density
+    r_post <- post_b1(b0, beta1_n, sig2, y, x1)/post_b1(b0, beta1_c, sig2, y, x1) # Ratio of posterior distributions
     r_prop <- beta1_c / beta1_n   # Ratio of proposal distribution
     r <- r_post * r_prop # Acceptance ratio r
     u <- runif(1, min = 0, max = 1)   # 'Sample a probability' from the uniform distribution
@@ -140,7 +133,7 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
 
 dt$PM1_DIAG_CONDITION <- ifelse(dt$PM1_DIAG_CONDITION == 1, 1, 0) # make numeric
 # Choose starting values for each of the parameters
-chain1 <- gibbs.chains(b0 = 0.2, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION)
+chain1 <- gibbs.chains(b0 = 10, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION)
 chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION) 
 
 
@@ -167,21 +160,6 @@ gibbs_stats(chain2)
 
 # Assess convergence ------------------------------------------------------
 
-# Subset chains
-parameters <- colnames(chain1)  # saving for plot
-
-# b0:
-chains_b0 <- cbind(chain1[1001:nrow(chain1), 1], chain2[1001:nrow(chain2), 1])  # extract b0 & remove the warm up 
-colnames(chains_b0) <- c("chain1", "chain2") 
-# b1:
-chains_b1 <- cbind(chain1[1001:nrow(chain1), 2], chain2[1001:nrow(chain2), 2])   # extract b1 & remove the warm up 
-colnames(chains_b1) <- c("chain1", "chain2")
-# var:
-chains_var <- cbind(chain1[1001:nrow(chain1), 3], chain2[1001:nrow(chain2), 3])   # extract variance & remove the warm up 
-colnames(chains_var) <- c("chain1", "chain2")
-
-rm(chain1, chain2)
-
 # Traceplots
 traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter)
   
@@ -201,7 +179,7 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
         axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
         axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
   
-  ggsave(paste0("../Output/traceplot_", par[i], ".png"), width = 8, height = 4)
+  ggsave(paste0("../Output/traceplot_inform", par[i], ".png"), width = 8, height = 4)
   
   }
   
@@ -230,7 +208,6 @@ autocors <- function(chain) {    # only handles 2 chains (per parameter)
 
 }
 
-# Test
 ac1 <- autocors(chain1)
 ac2 <- autocors(chain2) 
 
@@ -253,7 +230,7 @@ autocorplot <- function(ac1, ac2) {
       axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
       axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
   
-  ggsave(paste0("../Output/acplot_", par[i], ".png"), width = 8, height = 4)
+  ggsave(paste0("../Output/acplot_inform", par[i], ".png"), width = 8, height = 4)
   
   }
   
