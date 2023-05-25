@@ -68,7 +68,7 @@ plot(mod)[2] # QQ-plot shows divergence from normality at the tails
 mu00 <- 1 # Q. make this based on data or hwatever
 zeta00 <- 1.0E4 
 # b1 
-mu10 <- 4.8 # prior mean
+mu10 <- -11.7 # prior mean
 zeta10 <- 1.0E4 # prior variance
 nu10 <- 100 # prior df's -> bigger = wider tails
 # variance (σ^2) 
@@ -86,7 +86,6 @@ post_b1 <- function(b0, b1, sig2, y, x1) { # MH function for b1
 }
 
 gibbs.chains <- function(b0, b1, sig2, y, x1) {
-  set.seed(7079540)
   warmup <- 1000
   H <- 50000 + warmup # number of samples drawn 
   n_par <- 3
@@ -103,7 +102,7 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
     
     # b1 (incl. MH, Non-conjugate prior):
     beta1_c <- b1 
-    beta1_n <- rnorm(1, mean = 2, sd = 3)   # Sample from proposal density
+    beta1_n <- rnorm(1, mean = 1, sd = 3)   # Sample from proposal density
     r_post <- post_b1(b0, beta1_n, sig2, y, x1)/post_b1(b0, beta1_c, sig2, y, x1) # Ratio of posterior distributions
     r_prop <- beta1_c / beta1_n   # Ratio of proposal distribution
     r <- r_post * r_prop # Acceptance ratio r
@@ -155,8 +154,8 @@ gibbs_stats <- function(chain) { # requires a datatable, with columns as paramet
   
 }
 
-gibbs_stats(chain1) 
-gibbs_stats(chain2)
+gibbs_stats(chain1) %>% write.csv(., file = "../Output/Estimates_chain1.csv", row.names = F)
+gibbs_stats(chain2) %>% write.csv(., file = "../Output/Estimates_chain2.csv", row.names = F)
 
 # Assess convergence ------------------------------------------------------
 
