@@ -130,7 +130,6 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
 # Third: obtain the Gibbs estimates
 
 dt$PM1_DIAG_CONDITION <- ifelse(dt$PM1_DIAG_CONDITION == 1, 1, 0) # make numeric
-dt$PHQ9_SCORE <- dt$PHQ9_SCORE - mean(dt$PHQ9_SCORE)
 # Choose starting values for each of the parameters
 chain1 <- gibbs.chains(b0 = 10, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION)
 chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION) 
