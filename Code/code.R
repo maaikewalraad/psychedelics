@@ -72,8 +72,8 @@ mu10 <- -11.7 # prior mean
 zeta10 <- 3^2 # prior variance
 nu10 <- 25 # prior df's -> bigger = wider tails
 # variance (σ^2) 
-a_0 = 1
-b_0 = 1 # Vague priors, cause sample residual variance in historical data unknown
+a_0 = 0.001
+b_0 = 0.001 # Vague priors, cause sample residual variance in historical data unknown
 sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
 
 # Second step: the Gibbs algorithm
@@ -87,7 +87,7 @@ post_b1 <- function(b0, b1, sig2, y, x1) { # MH function for b1
 
 gibbs.chains <- function(b0, b1, sig2, y, x1) {
   warmup <- 1000
-  H <- 50000 + warmup # number of samples drawn 
+  H <- 25000 + warmup # number of samples drawn 
   n_par <- 3
   simulated <- matrix(0, nrow = H, ncol = n_par)
   colnames(simulated) <- c("b0","b1", "sig2") 
