@@ -73,8 +73,7 @@ zeta10 <- 3^2 # prior variance
 nu10 <- 25 # prior df's -> bigger = wider tails
 # variance (σ^2) 
 a_0 = 0.001
-b_0 = 0.001 # Vague priors, cause sample residual variance in historical data unknown
-sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
+b_0 = 0.001 # Vague priors, because sample residual variance in historical data unknown
 
 # Second step: the Gibbs algorithm
 
