@@ -65,18 +65,18 @@ plot(mod)[2] # QQ-plot shows divergence from normality at the tails
 
 # Informative priors. These are based on the historical data (see manuscript)
 # b0 
-mu00 <- 1 # Q. make this based on data or hwatever
+mu00 <- 0 # Q. make this based on data or whatever
 zeta00 <- 1.0E4 
 # b1 
 mu10 <- -11.7 # prior mean
-zeta10 <- 1.0E4 # prior variance
-nu10 <- 100 # prior df's -> bigger = wider tails
+zeta10 <- 3^2 # prior variance
+nu10 <- 25 # prior df's -> bigger = wider tails
 # variance (σ^2) 
 a_0 = 1
 b_0 = 1 # Vague priors, cause sample residual variance in historical data unknown
 sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
 
-# Second step: make a Gibbs function
+# Second step: the Gibbs algorithm
 
 post_b1 <- function(b0, b1, sig2, y, x1) { # MH function for b1
   I <- -(b1^2) * ((sum(x1^2))/(2*sig2)) + b1 * ((sum(x1*(y - b0))) / (sig2))
@@ -93,28 +93,28 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
   colnames(simulated) <- c("b0","b1", "sig2") 
   simulated[1, ] <- c(b0, b1, sig2)
   
-  for (h in 2:H) {
-    # determine full conditional value for...
+  for (h in 2:H) { # determine full conditional distribution for...
+
     # b0:
     mu0 <- (sum(y-b1*x1)/sig2 + (mu00/zeta00))/((nrow(dt) / sig2) + (1 / zeta00))  
     sd0 <- sqrt(1 / ((nrow(dt) / sig2) + (1 / zeta00)))
-    b0 <- rnorm(1, mu0, sd0)
+    b0 <- rnorm(1, mu0, sd0) # sample from distribution
     
     # b1 (incl. MH, Non-conjugate prior):
     beta1_c <- b1 
-    beta1_n <- rnorm(1, mean = 1, sd = 3)   # Sample from proposal density
+    beta1_n <- rnorm(1, mean = 0, sd = 1)   # Sample from proposal density
     r_post <- post_b1(b0, beta1_n, sig2, y, x1)/post_b1(b0, beta1_c, sig2, y, x1) # Ratio of posterior distributions
     r_prop <- beta1_c / beta1_n   # Ratio of proposal distribution
     r <- r_post * r_prop # Acceptance ratio r
     u <- runif(1, min = 0, max = 1)   # 'Sample a probability' from the uniform distribution
-    ifelse(u <= abs(r), b1 <- beta1_n, b1 <- beta1_c) 
+    ifelse(u <= abs(r), b1 <- beta1_n, b1 <- beta1_c) # retain of reject newly sampled value
     
     # # b1 (exc. MH)
     # mu1 <- (sum(x1*(y-b0)) / sig2 + (mu10/zeta10)) / ((sum(x1^2) / sig2) + (1 / zeta10))
     # sd1 <- sqrt(1 / ((sum(x1^2) / sig2) + (1 / zeta10)))
     # b1 <- rnorm(1, mu1, sd1)
     
-    # var: 
+    # variance: 
     a_1 <- (nrow(dt) / 2) + a_0 # posterior shape
     S <- sum(y - (b0 + b1*x1))^2 # RSS
     b_1 <- (S / 2) + b_0 # posterior scale 
@@ -131,6 +131,7 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
 # Third: obtain the Gibbs estimates
 
 dt$PM1_DIAG_CONDITION <- ifelse(dt$PM1_DIAG_CONDITION == 1, 1, 0) # make numeric
+dt$PHQ9_SCORE <- dt$PHQ9_SCORE - mean(dt$PHQ9_SCORE)
 # Choose starting values for each of the parameters
 chain1 <- gibbs.chains(b0 = 10, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION)
 chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION) 
@@ -138,8 +139,8 @@ chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_
 
 # Estimates ---------------------------------------------------------------
 
-chain1 <- as.data.table(chain1[1001:nrow(chain1), ])
-chain2 <- as.data.table(chain2[1001:nrow(chain2), ])
+chain1 <- as.data.table(chain1[1001:nrow(chain1), ]) # remove warmup
+chain2 <- as.data.table(chain2[1001:nrow(chain2), ]) # and transform into datatable
 
 gibbs_stats <- function(chain) { # requires a datatable, with columns as parameters
   
@@ -168,8 +169,8 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
   for (i in 1:length(par)) {
     
     ggplot() + 
-      geom_line(chain1, mapping = aes_string(x = I(1:H), y = par[i]), color = "#CC3399", linewidth = 0.4, alpha = 0.8) + 
-      geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#0000FF", linewidth = 0.4, alpha = 0.6) +
+      geom_line(chain1, mapping = aes_string(x = I(1:H), y = par[i]), color = "#CC3399", linewidth = 0.4) +  # alpha = 0.8
+      geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#0000FF", linewidth = 0.4) +  # alpha = 0.6
       ggtitle("Convergence plot") +
       ylab("Sampled value") +
       xlab("Number of iterations") +
@@ -177,10 +178,10 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
         plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
         axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
         axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
-  
+
   ggsave(paste0("../Output/traceplot_inform", par[i], ".png"), width = 8, height = 4)
-  
   }
+  
   
 }
 
@@ -223,7 +224,7 @@ autocorplot <- function(ac1, ac2) {
     ggtitle("Chain 1") +
     xlab("Lag") +
     ylab("Autocorrelation") +
-    ylim(0,1) +
+    # ylim(0,1) +
     theme(
       plot.title = element_text(color = "grey44", size = 11, face = "bold.italic", hjust = 0.45),
       axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
@@ -236,3 +237,4 @@ autocorplot <- function(ac1, ac2) {
 }
 
 autocorplot(ac1, ac2)
+
