@@ -39,9 +39,7 @@ summary(mod)
 plot(mod)[1] 
 
 # normality in the outcome
-dt %$% hist(PHQ9_SCORE) # DEPENDENT VARIABLE 
-dt %>% filter(PM1_DIAG_CONDITION == 0) %$% hist(PHQ9_SCORE) 
-dt %>% filter(PM1_DIAG_CONDITION == 1) %$% hist(PHQ9_SCORE) 
+dt %$% hist(PHQ9_SCORE) # DEPENDENT VARIABLE  
 
 # normality in residuals
 plot(mod)[2] # QQ-plot shows divergence from normality at the tails
@@ -72,8 +70,8 @@ mu10 <- -11.7 # prior mean
 zeta10 <- 3^2 # prior variance
 nu10 <- 25 # prior df's -> bigger = wider tails
 # variance (σ^2) 
-a_0 = 0.001
-b_0 = 0.001 # Vague priors, because sample residual variance in historical data unknown
+a_0 = 1 # Q. change to 0.001 later
+b_0 = 1 # Vague priors, because sample residual variance in historical data unknown
 
 # Second step: the Gibbs algorithm
 
@@ -101,7 +99,7 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
     
     # b1 (incl. MH, Non-conjugate prior):
     beta1_c <- b1 
-    beta1_n <- rnorm(1, mean = 0, sd = 1)   # Sample from proposal density
+    beta1_n <- rnorm(1, mean = 0, sd = 3)   # Sample from proposal density
     r_post <- post_b1(b0, beta1_n, sig2, y, x1)/post_b1(b0, beta1_c, sig2, y, x1) # Ratio of posterior distributions
     r_prop <- beta1_c / beta1_n   # Ratio of proposal distribution
     r <- r_post * r_prop # Acceptance ratio r
