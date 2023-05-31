@@ -67,7 +67,7 @@ mu00 <- 0 # Q. make this based on data or whatever
 zeta00 <- 1.0E4 
 # b1 
 mu10 <- -11.7 # prior mean
-zeta10 <- 3^2 # prior variance
+zeta10 <- 1.0E4 # prior variance (3^2)
 nu10 <- 25 # prior df's -> bigger = wider tails
 # variance (σ^2) 
 a_0 = 1 # Q. change to 0.001 later
