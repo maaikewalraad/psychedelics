@@ -15,7 +15,7 @@ md <- read.csv("../Data/AHRI_DATASET_PM_MANUSCRIPT_CODEBOOK.csv") # metadata
 md %<>% as.data.table
 
 # Data wrangling ----------------------------------------------------------
-dt %<>% select(PHQ9_SCORE, PM1_DIAG_CONDITION, C_DP) # keep main variables only
+dt %<>% select(PHQ9_SCORE, PM1_DIAG_CONDITION, C_DP, C_TOTAL, CCI_SCORE) # keep main variables only
 str(dt)
 
 # Inclusion criteria include:
@@ -30,10 +30,13 @@ dt %<>% filter(PHQ9_SCORE >= 15) # most patients with PHQ9 score of 15 or higher
 describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 
 # Fit standard linear model -----------------------------------------------
-mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION, data = dt)
+mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION + C_TOTAL, data = dt)
 summary(mod)
 
 # Assumptions -------------------------------------------------------------
+
+# Linearity
+plot(x = dt$C_TOTAL, y = dt$PHQ9_SCORE)
 
 # homoscedasticity (constant residual variance)
 plot(mod)[1] 
