@@ -30,7 +30,7 @@ dt %<>% filter(PHQ9_SCORE >= 15) # most patients with PHQ9 score of 15 or higher
 describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 
 # Fit standard linear model -----------------------------------------------
-mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION + C_TOTAL, data = dt)
+mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION, data = dt)
 summary(mod)
 
 # Assumptions -------------------------------------------------------------
@@ -70,11 +70,11 @@ mu00 <- 0 # Q. make this based on data or whatever
 zeta00 <- 1.0E4 
 # b1 
 mu10 <- -11.7 # prior mean
-zeta10 <- 1.0E4 # prior variance (3^2)
+zeta10 <- 3^2 # prior variance 
 nu10 <- 25 # prior df's -> bigger = wider tails
 # variance (σ^2) 
-a_0 = 1 # Q. change to 0.001 later
-b_0 = 1 # Vague priors, because sample residual variance in historical data unknown
+a_0 = 1.0E4 
+b_0 = 1.0E4 # large values for scale and shape denote strong belief 
 
 # Second step: the Gibbs algorithm
 
@@ -178,7 +178,7 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
         axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
         axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
 
-  ggsave(paste0("../Output/traceplot_inform", par[i], ".png"), width = 8, height = 4)
+  ggsave(paste0("../Output/traceplot_", par[i], ".png"), width = 8, height = 4)
   }
   
   
@@ -229,7 +229,7 @@ autocorplot <- function(ac1, ac2) {
       axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
       axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
   
-  ggsave(paste0("../Output/acplot_inform", par[i], ".png"), width = 8, height = 4)
+  ggsave(paste0("../Output/acplot_", par[i], ".png"), width = 8, height = 4)
   
   }
   
