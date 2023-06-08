@@ -223,7 +223,7 @@ autocorplot <- function(ac1, ac2) {
     ggtitle("Chain 1") +
     xlab("Lag") +
     ylab("Autocorrelation") +
-    # ylim(0,1) +
+    ylim(0,1) + # fix y axis to compare among different parameters
     theme(
       plot.title = element_text(color = "grey44", size = 11, face = "bold.italic", hjust = 0.45),
       axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
