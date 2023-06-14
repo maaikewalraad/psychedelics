@@ -32,6 +32,7 @@ describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 # Fit standard linear model -----------------------------------------------
 mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION, data = dt)
 summary(mod)
+confint(mod)
 
 # Assumptions -------------------------------------------------------------
 
@@ -71,7 +72,7 @@ zeta00 <- 1.0E4
 # b1 
 mu10 <- -11.7 # prior mean
 zeta10 <- 3^2 # prior variance 
-nu10 <- 25 # prior df's: smaller -> heavier tails
+nu10 <- 21 # prior df's: smaller -> heavier tails
 # variance (σ^2) 
 a_0 = 1.0E4 
 b_0 = 1.0E4 # large values for scale and shape denote strong belief 
@@ -102,7 +103,7 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
     
     # b1 (incl. MH, Non-conjugate prior):
     beta1_c <- b1 
-    beta1_n <- rnorm(1, mean = 0, sd = 3)   # Sample from proposal density
+    beta1_n <- rnorm(1, mean = 0, sd = 2)   # Sample from proposal density
     r_post <- post_b1(b0, beta1_n, sig2, y, x1)/post_b1(b0, beta1_c, sig2, y, x1) # Ratio of posterior distributions
     r_prop <- beta1_c / beta1_n   # Ratio of proposal distribution
     r <- r_post * r_prop # Acceptance ratio r
@@ -185,6 +186,13 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
 }
 
 traceplot(chain1, chain2)
+
+# Acceptance rate b1
+rej <- 0
+for (i in 2:nrow(chain2)){
+  if(chain2[i, b1] == chain2[i-1, b1]) rej <- rej + 1
+}
+(1 - rej/nrow(chain1)) * 100 # acceptance rate
 
 
 # Autocorrelation plots
