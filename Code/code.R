@@ -71,7 +71,7 @@ zeta00 <- 1.0E4
 # b1 
 mu10 <- -11.7 # prior mean
 zeta10 <- 3^2 # prior variance 
-nu10 <- 25 # prior df's -> bigger = wider tails
+nu10 <- 25 # prior df's: smaller -> heavier tails
 # variance (σ^2) 
 a_0 = 1.0E4 
 b_0 = 1.0E4 # large values for scale and shape denote strong belief 
