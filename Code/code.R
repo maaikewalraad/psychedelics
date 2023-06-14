@@ -79,8 +79,8 @@ b_0 = 1.0E4 # large values for scale and shape denote strong belief
 # Second step: the Gibbs algorithm
 
 post_b1 <- function(b0, b1, sig2, y, x1) { # MH function for b1
-  I <- -(b1^2) * ((sum(x1^2))/(2*sig2)) + b1 * ((sum(x1*(y - b0))) / (sig2))
-  II <- (1 + ((b1 - mu10)^2)/(nu10*zeta10))^((nu10+1)/2)
+  I <- -(b1^2) * ((sum(x1^2))/(2*sig2)) + b1 * ((sum(x1*(y - b0))) / (sig2)) # likelihood
+  II <- (1 + ((b1 - mu10)^2)/(nu10*zeta10))^((nu10+1)/2) # prior
   r_post <- exp(I) * II
   return(r_post) 
 }
