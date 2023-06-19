@@ -179,7 +179,7 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
       xlab("Number of iterations") +
       theme_minimal() +
       theme(
-        plot.title = element_text(color = "black", size = 13, face = "bold.italic", hjust = 0.45),
+        title = element_text(color = "black", size = 13, face = "bold.italic", hjust = 0.45),
         axis.title.x = element_text(color = "#333333", size = 12),
         axis.title.y = element_text(color = "#333333", size = 12),
         axis.text = element_text(size = 10))
@@ -249,7 +249,7 @@ autocorplot <- function(ac1, ac2) {
     ylim(0,1) + # fix y axis to compare among different parameters
     theme_minimal() +
     theme(
-      plot.title = element_text(color = "black", size = 13, face = "bold.italic", hjust = 0.45),
+      title = element_text(color = "black", size = 13, face = "bold.italic", hjust = 0.45),
       axis.title.x = element_text(color = "#333333", size = 12),
       axis.title.y = element_text(color = "#333333", size = 12),
       axis.text = element_text(size = 10))
