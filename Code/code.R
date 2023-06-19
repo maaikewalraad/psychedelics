@@ -5,6 +5,7 @@ require(psych) # describe()
 require(dplyr) # data wrangling
 require(knitr) 
 require(ggpubr)
+require(latex2exp)
 
 set.seed(7079540) # for reproducibility
 
@@ -136,6 +137,24 @@ dt$PM1_DIAG_CONDITION <- ifelse(dt$PM1_DIAG_CONDITION == 1, 1, 0) # make numeric
 chain1 <- gibbs.chains(b0 = 10, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION)
 chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION) 
 
+
+# Proof Gibbs algorithm ---------------------------------------------------
+
+fc1 <- as.data.table(chain1[2:1000, "b0"]) # first 1000 iterations (minus the starting value)
+fc2 <- as.data.table(chain2[2:1000, "b0"]) # of b0
+
+ggplot() + 
+  geom_line(fc1, mapping = aes(x = I(1:nrow(fc1)), y = fc1$V1), color = "#CC3399", linewidth = 0.4) +  # alpha = 0.8
+  geom_line(fc2, mapping = aes(x = I(1:nrow(fc2)), y = fc2$V1), color = "#0000FF", linewidth = 0.4) +  # alpha = 0.6
+  ggtitle(TeX("First 1000 iterations for $b_{0}$")) +
+  ylab("Sampled value") +
+  xlab("Number of iterations") +
+  theme(
+    plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
+    axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
+    axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+
+ggsave("../Output/gibbs_proof.png", width = 8, height = 4)
 
 # Estimates ---------------------------------------------------------------
 
