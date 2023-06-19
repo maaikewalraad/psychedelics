@@ -5,7 +5,6 @@ require(psych) # describe()
 require(dplyr) # data wrangling
 require(knitr) 
 require(ggpubr)
-require(latex2exp)
 
 set.seed(7079540) # for reproducibility
 
@@ -128,14 +127,15 @@ fc2 <- as.data.table(chain2[1:1000, "b0"]) # of b0
 ggplot() + 
   geom_line(fc1, mapping = aes(x = I(1:nrow(fc1)), y = fc1$V1), color = "#CC3399", linewidth = 0.4) +  # alpha = 0.8
   geom_line(fc2, mapping = aes(x = I(1:nrow(fc2)), y = fc2$V1), color = "#0000FF", linewidth = 0.4) +  # alpha = 0.6
-  ggtitle(TeX("First 1000 iterations for $b_{0}$")) +
+  ggtitle("First 1000 iterations for b0") +
   ylab("Sampled value") +
   xlab("Number of iterations") +
   theme_minimal() +
   theme(
-    plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
-    axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
-    axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+    plot.title = element_text(color = "black", size = 13, face = "bold.italic", hjust = 0.45),
+    axis.title.x = element_text(color = "#333333", size = 12, face = "bold"),
+    axis.title.y = element_text(color = "#333333", size = 12, face = "bold"),
+    axis.text = element_text(size = 10))
 
 ggsave("../Output/gibbs_proof.png", width = 8, height = 4)
 
@@ -167,23 +167,33 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
   
   par <- colnames(chain1)
   H <- nrow(chain1)
+  plots <- list()
   
   for (i in 1:length(par)) {
     
-    ggplot() + 
+    tmp <- ggplot() + 
       geom_line(chain1, mapping = aes_string(x = I(1:H), y = par[i]), color = "#CC3399", linewidth = 0.4) +  # alpha = 0.8
       geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#0000FF", linewidth = 0.4) +  # alpha = 0.6
-      ggtitle(paste0("Convergence plot ", par[i])) +
+      ggtitle(par[i]) +
       ylab("Sampled value") +
       xlab("Number of iterations") +
       theme_minimal() +
       theme(
-        plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
-        axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
-        axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+        plot.title = element_text(color = "black", size = 13, face = "bold.italic", hjust = 0.45),
+        axis.title.x = element_text(color = "#333333", size = 12),
+        axis.title.y = element_text(color = "#333333", size = 12),
+        axis.text = element_text(size = 10))
 
   ggsave(paste0("../Output/traceplot_", par[i], ".png"), width = 8, height = 4)
+  
+  plots[[i]] <- tmp 
+  
   }
+
+  ggarrange(plotlist = plots, 
+            nrow = length(plots), ncol = 1)
+  
+  ggsave("../Output/traceplots.png", width = 9, height = 6) # for manuscript
   
   
 }
@@ -226,25 +236,35 @@ autocorplot <- function(ac1, ac2) {
   
   par <- colnames(ac1)
   lags <- nrow(ac1)
+  plots <- list()
   
   for (i in 1:length(par)) {
   
-    ggplot() +
+    tmp <- ggplot() +
     geom_bar(ac1, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#CC3399", width = 0.1, alpha = 0.4, stat = "identity") +
     geom_bar(ac2, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#FF99FF", width = 0.1, alpha = 0.4, stat = "identity") +
-    ggtitle(paste0("Autocorrelation plot ", par[i])) +
+    ggtitle(par[i]) +
     xlab("Lag") +
     ylab("Autocorrelation") +
     ylim(0,1) + # fix y axis to compare among different parameters
     theme_minimal() +
     theme(
-      plot.title = element_text(color = "grey44", size = 11, face = "bold.italic", hjust = 0.45),
-      axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
-      axis.title.y = element_text(color = "#333333", size = 10, face = "bold"))
+      plot.title = element_text(color = "black", size = 13, face = "bold.italic", hjust = 0.45),
+      axis.title.x = element_text(color = "#333333", size = 12),
+      axis.title.y = element_text(color = "#333333", size = 12),
+      axis.text = element_text(size = 10))
   
   ggsave(paste0("../Output/acplot_", par[i], ".png"), width = 8, height = 4)
   
+  plots[[i]] <- tmp
+  
   }
+  
+  ggarrange(plotlist = plots,
+            nrow = length(plots), ncol = 1)
+  
+  ggsave("../Output/acplots.png", width = 9, height = 6) # for manuscript
+  
   
 }
 
