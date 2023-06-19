@@ -32,8 +32,8 @@ describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 
 # Fit standard linear model -----------------------------------------------
 mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION, data = dt)
-summary(mod)
-confint(mod)
+mod_output <- cbind(summary(mod)$coef, confint(mod))
+mod_output %>% write.csv(., file = "../Output/Estimates_olr.csv", row.names = F)
 
 # Assumptions -------------------------------------------------------------
 
@@ -56,7 +56,7 @@ plot(mod)[2] # QQ-plot shows divergence from normality at the tails
 
 # b0 
 mu00 <- 0 
-zeta00 <- 1.0E4 # Q. make potentially smaller  
+zeta00 <- 1.0E3 # uninformative 
 # b1 
 mu10 <- -11.7 # prior mean
 zeta10 <- 3^2 # prior variance 
@@ -195,7 +195,8 @@ rej <- 0
 for (i in 2:nrow(chain2)){
   if(chain2[i, b1] == chain2[i-1, b1]) rej <- rej + 1
 }
-(1 - rej/nrow(chain1)) * 100 # acceptance rate
+acc <- (1 - rej/nrow(chain1)) * 100 # acceptance rate
+acc %>% write.csv(., file = "../Output/Acc_rate_b1.csv", row.names = F)
 
 
 # Autocorrelation plots
