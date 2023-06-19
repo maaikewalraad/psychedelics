@@ -51,32 +51,19 @@ plot(mod)[2] # QQ-plot shows divergence from normality at the tails
 
 # Gibbs sampling ----------------------------------------------------------
 
-# First step: specify priors for each parameter. 
+# First step: specify (informative) priors for each parameter. 
+# These are based on historical data (see manuscript)
 
-# # Uninformative priors (compare with standard lm)
-# # b0 
-# mu00 <- 1 
-# zeta00 <- 1.0E4  
-# # b1 
-# mu10 <- 1
-# zeta10 <- 1.0E4
-# nu10 <- 100 # prior df's -> bigger = wider tails
-# # variance (σ^2) 
-# a_0 = 1 
-# b_0 = 1
-# sig2_0 = 1/rgamma(1, shape = a_0, rate = b_0) 
-
-# Informative priors. These are based on the historical data (see manuscript)
 # b0 
-mu00 <- 0 # Q. make this based on data or whatever
-zeta00 <- 1.0E4 
+mu00 <- 0 
+zeta00 <- 1.0E4 # Q. make potentially smaller  
 # b1 
 mu10 <- -11.7 # prior mean
 zeta10 <- 3^2 # prior variance 
-nu10 <- 21 # prior df's: smaller -> heavier tails
-# variance (σ^2) 
-a_0 = 1.0E4 
-b_0 = 1.0E4 # large values for scale and shape denote strong belief 
+nu10 <- 21 # prior df's
+# sig2
+a_0 = 24 / 2 # 1.0E4 
+b_0 = 100 / 2 # 1.0E4 # large values for scale and shape denote strong belief 
 
 # Second step: the Gibbs algorithm
 
@@ -111,12 +98,7 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
     u <- runif(1, min = 0, max = 1)   # 'Sample a probability' from the uniform distribution
     ifelse(u <= abs(r), b1 <- beta1_n, b1 <- beta1_c) # retain of reject newly sampled value
     
-    # # b1 (exc. MH)
-    # mu1 <- (sum(x1*(y-b0)) / sig2 + (mu10/zeta10)) / ((sum(x1^2) / sig2) + (1 / zeta10))
-    # sd1 <- sqrt(1 / ((sum(x1^2) / sig2) + (1 / zeta10)))
-    # b1 <- rnorm(1, mu1, sd1)
-    
-    # variance: 
+    # sig2: 
     a_1 <- (nrow(dt) / 2) + a_0 # posterior shape
     S <- sum(y - (b0 + b1*x1))^2 # RSS
     b_1 <- (S / 2) + b_0 # posterior scale 
@@ -134,14 +116,14 @@ gibbs.chains <- function(b0, b1, sig2, y, x1) {
 
 dt$PM1_DIAG_CONDITION <- ifelse(dt$PM1_DIAG_CONDITION == 1, 1, 0) # make numeric
 # Choose starting values for each of the parameters
-chain1 <- gibbs.chains(b0 = 10, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION)
-chain2 <- gibbs.chains(b0 = 2, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION) 
+chain1 <- gibbs.chains(b0 = 15, b1 = 0.3, sig2 = 0.5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION)
+chain2 <- gibbs.chains(b0 = 25, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1_DIAG_CONDITION) 
 
 
 # Proof Gibbs algorithm ---------------------------------------------------
 
-fc1 <- as.data.table(chain1[2:1000, "b0"]) # first 1000 iterations (minus the starting value)
-fc2 <- as.data.table(chain2[2:1000, "b0"]) # of b0
+fc1 <- as.data.table(chain1[1:1000, "b0"]) # first 1000 iterations (minus the starting value)
+fc2 <- as.data.table(chain2[1:1000, "b0"]) # of b0
 
 ggplot() + 
   geom_line(fc1, mapping = aes(x = I(1:nrow(fc1)), y = fc1$V1), color = "#CC3399", linewidth = 0.4) +  # alpha = 0.8
@@ -149,6 +131,7 @@ ggplot() +
   ggtitle(TeX("First 1000 iterations for $b_{0}$")) +
   ylab("Sampled value") +
   xlab("Number of iterations") +
+  theme_minimal() +
   theme(
     plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
     axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
@@ -193,6 +176,7 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
       ggtitle("Convergence plot") +
       ylab("Sampled value") +
       xlab("Number of iterations") +
+      theme_minimal() +
       theme(
         plot.title = element_text(color = "black", size = 11, face = "bold.italic", hjust = 0.45),
         axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
@@ -251,6 +235,7 @@ autocorplot <- function(ac1, ac2) {
     xlab("Lag") +
     ylab("Autocorrelation") +
     ylim(0,1) + # fix y axis to compare among different parameters
+    theme_minimal() +
     theme(
       plot.title = element_text(color = "grey44", size = 11, face = "bold.italic", hjust = 0.45),
       axis.title.x = element_text(color = "#333333", size = 10, face = "bold"),
