@@ -173,7 +173,7 @@ traceplot <- function(chain1, chain2) {   # only handles 2 chains (per parameter
     ggplot() + 
       geom_line(chain1, mapping = aes_string(x = I(1:H), y = par[i]), color = "#CC3399", linewidth = 0.4) +  # alpha = 0.8
       geom_line(chain2, mapping = aes_string(x = I(1:H), y = par[i]), color = "#0000FF", linewidth = 0.4) +  # alpha = 0.6
-      ggtitle("Convergence plot") +
+      ggtitle(paste0("Convergence plot ", par[i])) +
       ylab("Sampled value") +
       xlab("Number of iterations") +
       theme_minimal() +
@@ -232,7 +232,7 @@ autocorplot <- function(ac1, ac2) {
     ggplot() +
     geom_bar(ac1, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#CC3399", width = 0.1, alpha = 0.4, stat = "identity") +
     geom_bar(ac2, mapping = aes_string(x = I(1:lags), y = par[i]), col = "#FF99FF", width = 0.1, alpha = 0.4, stat = "identity") +
-    ggtitle("Chain 1") +
+    ggtitle(paste0("Autocorrelation plot ", par[i])) +
     xlab("Lag") +
     ylab("Autocorrelation") +
     ylim(0,1) + # fix y axis to compare among different parameters
