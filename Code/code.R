@@ -122,7 +122,7 @@ chain2 <- gibbs.chains(b0 = 25, b1 = 3, sig2 = 5, y = dt$PHQ9_SCORE, x1 = dt$PM1
 
 # Proof Gibbs algorithm ---------------------------------------------------
 
-fc1 <- as.data.table(chain1[1:1000, "b0"]) # first 1000 iterations (minus the starting value)
+fc1 <- as.data.table(chain1[1:1000, "b0"]) # first 1000 iterations (incl. the starting value)
 fc2 <- as.data.table(chain2[1:1000, "b0"]) # of b0
 
 ggplot() + 
