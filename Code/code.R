@@ -23,7 +23,6 @@ dt %<>% filter(C_DP == 1) # experienced depression last year
 dt %<>% filter(PM1_DIAG_CONDITION != -99) # keep category 0 and 1 only (no need to use C_DP since these people are *diagnosed* with some psychiatric disorder)
 dt$PM1_DIAG_CONDITION <- factor(dt$PM1_DIAG_CONDITION, levels = c(0, 1))
 md[VAR == "PHQ9_GE10"]$Description
-#dt %<>% filter(PHQ9_GE10 == 1) # "while most patients (88%) with major depression had scores of 10 or greater."
 dt %<>% filter(PHQ9_SCORE >= 15) # most patients with PHQ9 score of 15 or higher get treatment
 
 # Descriptive statistics -----------------------------------------------------
