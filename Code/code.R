@@ -32,6 +32,8 @@ describeBy(dt$PHQ9_SCORE, dt$PM1_DIAG_CONDITION)
 # Fit standard linear model -----------------------------------------------
 mod <- lm(PHQ9_SCORE ~ PM1_DIAG_CONDITION, data = dt)
 mod_output <- cbind(summary(mod)$coef, confint(mod))
+err <- data.table(Estimate = (summary(mod)$sigma)^2)
+mod_output <- rbind(mod_output, err, fill = T)
 mod_output %>% write.csv(., file = "../Output/Estimates_olr.csv", row.names = F)
 
 # Assumptions -------------------------------------------------------------
